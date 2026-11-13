@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz Result</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;
+  font-family:'Segoe UI',Roboto,Arial,sans-serif;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed 50%,#db2777);
+  padding:20px 16px 40px;
+}
+.wrap{max-width:520px;margin:auto}
+.card{background:#fff;border-radius:20px;padding:26px 20px;box-shadow:0 20px 40px rgba(0,0,0,.25);margin-bottom:16px}
+.center{text-align:center}
+.emoji{font-size:54px}
+h1{margin:6px 0 2px;font-size:24px;color:#111827}
+.msg{color:#6b7280;margin:0 0 18px}
+.ring{
+  width:150px;height:150px;border-radius:50%;margin:0 auto 16px;
+  display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(#10b981 calc({{ percent }} * 1%), #e5e7eb 0);
+}
+.ring div{
+  width:114px;height:114px;border-radius:50%;background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.ring b{font-size:32px;color:#111827}
+.ring span{font-size:13px;color:#6b7280}
+.stats{display:flex;gap:10px;margin:16px 0}
+.stat{flex:1;padding:12px;border-radius:14px;text-align:center;font-weight:700}
+.stat small{display:block;font-weight:500;opacity:.8}
+.good{background:#d1fae5;color:#065f46}
+.bad{background:#fee2e2;color:#991b1b}
+.btn{
+  display:block;text-align:center;text-decoration:none;
+  padding:14px;border-radius:14px;font-size:16px;font-weight:700;color:#fff;
+  background:linear-gradient(90deg,#4f46e5,#7c3aed);
+}
+h2{color:#fff;font-size:18px;margin:22px 4px 10px}
+.item{background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;border-left:6px solid}
+.item.ok{border-color:#10b981}
+.item.no{border-color:#ef4444}
+.item p{margin:0 0 6px;font-weight:600;color:#111827}
+.item div{font-size:14px;color:#4b5563}
+.tag-ok{color:#059669;font-weight:700}
+.tag-no{color:#dc2626;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card center">
+    {% if percent >= 80 %}
+      <div class="emoji">🏆</div><h1>Shandaar!</h1><p class="msg">Aap to genius nikle!</p>
+    {% elif percent >= 50 %}
+      <div class="emoji">👏</div><h1>Accha kiya!</h1><p class="msg">Thodi aur practice se top karoge.</p>
+    {% else %}
+      <div class="emoji">💪</div><h1>Koshish jaari rakho!</h1><p class="msg">Dobara try karo, score zaroor badhega.</p>
+    {% endif %}
+
+    <div class="ring"><div><b>{{ score }}/{{ total }}</b><span>{{ percent }}%</span></div></div>
+
+    <div class="stats">
+      <div class="stat good">{{ score }}<small>Correct</small></div>
+      <div class="stat bad">{{ total - score }}<small>Wrong / Skipped</small></div>
+    </div>
+
+    <a class="btn" href="/">🔄 Play Again</a>
+  </div>
+
+  <h2>Answer Review</h2>
+  {% for r in review %}
+  <div class="item {% if r.correct %}ok{% else %}no{% endif %}">
+    <p>{{ loop.index }}. {{ r.q }}</p>
+    <div>
+      {% if r.correct %}
+        <span class="tag-ok">✔ {{ r.answer }}</span>
+      {% else %}
+        <span class="tag-no">✘ Your answer: {{ r.your if r.your else 'Skipped' }}</span><br>
+        <span class="tag-ok">✔ Correct: {{ r.answer }}</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+</body>
+</html>

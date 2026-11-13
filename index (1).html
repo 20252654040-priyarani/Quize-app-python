@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz Master</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;
+  font-family:'Segoe UI',Roboto,Arial,sans-serif;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed 50%,#db2777);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.app{width:100%;max-width:520px}
+.brand{text-align:center;color:#fff;margin-bottom:14px}
+.brand h1{margin:0;font-size:28px;letter-spacing:.5px}
+.brand p{margin:4px 0 0;opacity:.85;font-size:14px}
+.card{background:#fff;border-radius:20px;padding:22px 20px;box-shadow:0 20px 40px rgba(0,0,0,.25)}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:#6b7280;margin-bottom:8px;font-weight:600}
+.badge{background:#eef2ff;color:#4f46e5;padding:4px 12px;border-radius:999px}
+.bar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-bottom:20px}
+.fill{height:100%;width:0;background:linear-gradient(90deg,#4f46e5,#db2777);border-radius:999px;transition:width .35s ease}
+.question{display:none;animation:slide .3s ease}
+.question.active{display:block}
+@keyframes slide{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+.question h2{font-size:20px;line-height:1.4;color:#111827;margin:0 0 18px}
+.option{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;margin-bottom:10px;
+  border:2px solid #e5e7eb;border-radius:14px;
+  font-size:16px;color:#1f2937;cursor:pointer;
+  transition:all .15s ease;background:#fff;
+}
+.option:hover{border-color:#a5b4fc;background:#f5f3ff}
+.option input{display:none}
+.dot{width:20px;height:20px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;transition:all .15s}
+.option.selected{border-color:#4f46e5;background:#eef2ff;font-weight:600}
+.option.selected .dot{border-color:#4f46e5;background:#4f46e5;box-shadow:inset 0 0 0 3px #fff}
+.nav{display:flex;gap:12px;margin-top:20px}
+.btn{
+  flex:1;padding:14px;font-size:16px;font-weight:700;border:0;border-radius:14px;
+  cursor:pointer;transition:transform .1s ease,opacity .2s;
+}
+.btn:active{transform:scale(.97)}
+.btn.prev{background:#f3f4f6;color:#374151}
+.btn.next{background:linear-gradient(90deg,#4f46e5,#7c3aed);color:#fff}
+.btn.submit{background:linear-gradient(90deg,#059669,#10b981);color:#fff}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.hidden{display:none!important}
+.hint{text-align:center;color:#9ca3af;font-size:12px;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="brand">
+    <h1>🧠 Quiz Master</h1>
+    <p>Apna general knowledge test karo</p>
+  </div>
+
+  <div class="card">
+    <div class="top">
+      <span class="badge" id="counter">Question 1 / {{ questions|length }}</span>
+      <span id="answeredText">0 answered</span>
+    </div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+
+    <form method="POST" id="quizForm">
+      <input type="hidden" name="ids" value="{{ ids }}">
+
+      {% for q in questions %}
+      <div class="question{% if loop.first %} active{% endif %}">
+        <h2>{{ loop.index }}. {{ q.q }}</h2>
+        {% for opt in q.options %}
+        <label class="option">
+          <input type="radio" name="q{{ q.id }}" value="{{ opt }}">
+          <span class="dot"></span>
+          <span>{{ opt }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% endfor %}
+
+      <div class="nav">
+        <button type="button" class="btn prev" id="prevBtn" disabled>← Back</button>
+        <button type="button" class="btn next" id="nextBtn">Next →</button>
+        <button type="submit" class="btn submit hidden" id="submitBtn">Submit ✓</button>
+      </div>
+    </form>
+  </div>
+  <div class="hint">Jawab chun kar Next dabao</div>
+</div>
+
+<script>
+(function () {
+  var qs = document.querySelectorAll('.question');
+  var total = qs.length;
+  var cur = 0;
+  var prev = document.getElementById('prevBtn');
+  var next = document.getElementById('nextBtn');
+  var submit = document.getElementById('submitBtn');
+  var counter = document.getElementById('counter');
+  var fill = document.getElementById('fill');
+  var answeredText = document.getElementById('answeredText');
+
+  function isAnswered(i) {
+    return qs[i].querySelector('input:checked') !== null;
+  }
+
+  function answeredCount() {
+    var c = 0;
+    for (var i = 0; i < total; i++) if (isAnswered(i)) c++;
+    return c;
+  }
+
+  function show(i) {
+    for (var k = 0; k < total; k++) qs[k].classList.remove('active');
+    qs[i].classList.add('active');
+    cur = i;
+    counter.textContent = 'Question ' + (i + 1) + ' / ' + total;
+    fill.style.width = ((i + 1) / total * 100) + '%';
+    prev.disabled = (i === 0);
+    var last = (i === total - 1);
+    next.classList.toggle('hidden', last);
+    submit.classList.toggle('hidden', !last);
+    answeredText.textContent = answeredCount() + ' answered';
+  }
+
+  qs.forEach(function (q) {
+    q.querySelectorAll('.option').forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        q.querySelectorAll('.option').forEach(function (o) { o.classList.remove('selected'); });
+        opt.classList.add('selected');
+        opt.querySelector('input').checked = true;
+        answeredText.textContent = answeredCount() + ' answered';
+      });
+    });
+  });
+
+  next.addEventListener('click', function () {
+    if (!isAnswered(cur)) {
+      if (!confirm('Is sawal ka jawab nahi diya. Skip karein?')) return;
+    }
+    if (cur < total - 1) show(cur + 1);
+  });
+
+  prev.addEventListener('click', function () {
+    if (cur > 0) show(cur - 1);
+  });
+
+  document.getElementById('quizForm').addEventListener('submit', function (e) {
+    var left = total - answeredCount();
+    if (left > 0 && !confirm(left + ' sawal bina jawab ke hain. Phir bhi submit karein?')) {
+      e.preventDefault();
+    }
+  });
+
+  show(0);
+})();
+</script>
+</body>
+</html>
